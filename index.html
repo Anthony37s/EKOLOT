@@ -302,16 +302,18 @@
         const wrapper = document.getElementById('chart-wrapper');
         const calcNote = document.getElementById('calc-note');
         
-        // --- FIX POUR FORCER LE CONTENU SUR UNE SEULE PAGE A4 ---
-        // 1. On donne une largeur fixe au document pour garantir une proportion parfaite
-        element.style.width = '800px';
-        element.style.margin = '0';
-        element.style.padding = '15px';
+        // --- FIX CENTRAGE PARFAIT ---
+        // On fixe la taille exactement au format A4 (environ 794px de large) pour empêcher les décalages
+        const originalBorder = element.style.border;
+        element.style.width = '794px';
+        element.style.maxWidth = '794px';
+        element.style.margin = '0 auto';
+        element.style.border = 'none'; // Enlève la bordure pointillée pour un rendu propre
         
-        // 2. On affiche la note
+        // Afficher la note
         calcNote.style.display = 'block';
 
-        // 3. Capture du graphique en image fixe
+        // Capture du graphique
         const imgData = canvas.toDataURL('image/png');
         const img = document.createElement('img');
         img.src = imgData;
@@ -323,19 +325,23 @@
         wrapper.appendChild(img);
 
         const opt = {
-            margin:       10, // Marges réduites du PDF
+            margin:       [10, 10, 10, 10], // Marges égales pour centrer le contenu
             filename:     'Devis_Centrage_Ekolot_JK05.pdf',
             image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true, windowWidth: 800 }, // Force la largeur pour le rendu
+            html2canvas:  { scale: 2, useCORS: true, scrollY: 0, scrollX: 0 }, // Ignore le défilement de l'écran
             jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
         html2pdf().set(opt).from(element).save().then(() => {
-            // --- RESTAURATION DU STYLE NORMAL APRÈS EXPORT ---
+            // --- RESTAURATION ---
             document.getElementById('temp-chart-img').remove(); 
             canvas.style.display = 'block'; 
             calcNote.style.display = 'none';
-            element.style.width = 'auto'; // Retire la largeur forcée
+            
+            // Remise en place de la page web normale
+            element.style.width = '100%';
+            element.style.maxWidth = 'none';
+            element.style.border = originalBorder;
         });
     }
 
