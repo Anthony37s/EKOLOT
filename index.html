@@ -25,22 +25,20 @@
         .btn-pdf { background-color: #e74c3c; }
         .btn-pdf:hover { background-color: #c0392b; }
         
-        #pdf-zone { padding: 15px; background: #fff; border: 2px dashed #ecf0f1; border-radius: 5px; }
+        #pdf-zone { padding: 15px; background: #fff; border: 2px dashed #ecf0f1; border-radius: 5px; box-sizing: border-box; }
         .header-pdf { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #3498db; padding-bottom: 5px; margin-bottom: 10px; }
         .plane-art { font-family: monospace; white-space: pre; font-size: 14px; color: #7f8c8d; font-weight: bold;}
         .results-box { background: #e8f4f8; padding: 10px; border-radius: 8px; margin-bottom: 10px; border-left: 5px solid #3498db; }
-        .results-box p { margin: 5px 0; font-size: 14px; }
         
         /* Styles pour la note de calcul */
         #calc-note { display: none; } /* CACHÉ PAR DÉFAUT SUR L'ÉCRAN */
-        .calc-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 12px; text-align: left; }
-        .calc-table th { background-color: #ecf0f1; padding: 6px; border-bottom: 2px solid #bdc3c7; color: #2c3e50;}
-        .calc-table td { padding: 6px; border-bottom: 1px solid #ecf0f1; }
+        .calc-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 11px; text-align: left; }
+        .calc-table th { background-color: #ecf0f1; padding: 5px; border-bottom: 2px solid #bdc3c7; color: #2c3e50;}
+        .calc-table td { padding: 5px; border-bottom: 1px solid #ecf0f1; }
         .calc-table .row-total { font-weight: bold; background-color: #e8f4f8; border-top: 2px solid #3498db; }
         .calc-table .row-zf { font-weight: bold; background-color: #fdf2e9; }
 
-        /* Hauteur encore réduite pour assurer que ça tienne sur 1 page A4 */
-        .chart-container { position: relative; height: 260px; width: 100%; display: flex; justify-content: center; align-items: center;}
+        .chart-container { position: relative; height: 250px; width: 100%; display: flex; justify-content: center; align-items: center;}
     </style>
 </head>
 <body>
@@ -90,7 +88,7 @@
         <div class="header-pdf">
             <div>
                 <h2 style="margin:0; color:#2c3e50; font-size: 18px;">Devis de Masse et Centrage - ULM EKOLOT JK05</h2>
-                <p style="margin:3px 0 0 0; color:#7f8c8d; font-size: 13px;" id="date-display"></p>
+                <p style="margin:3px 0 0 0; color:#7f8c8d; font-size: 12px;" id="date-display"></p>
             </div>
             <div class="plane-art">
    _|_   
@@ -115,7 +113,7 @@
 <script>
     let cgChartInstance = null;
 
-    // Données fixes de l'Ekolot JK-05LS Junior (Pesée)
+    // Données fixes de l'Ekolot JK-05LS Junior
     const W_empty = 302.5;
     const Arm_empty = 261.7;
     const Arm_crew = 190.0;
@@ -159,12 +157,11 @@
         const M_bag = W_bag * Arm_bag;
         const M_fuel = W_fuel * Arm_fuel;
 
-        // Totaux Décollage
+        // Totaux
         const W_init = W_empty + W_crew + W_bag + W_fuel;
         const M_init = M_empty + M_crew + M_bag + M_fuel;
         const CG_init = W_init > 0 ? (M_init / W_init) : 0;
 
-        // Totaux Sans Carburant
         const W_zf = W_empty + W_crew + W_bag;
         const M_zf = M_empty + M_crew + M_bag;
         const CG_zf = W_zf > 0 ? (M_zf / W_zf) : 0;
@@ -178,8 +175,8 @@
 
         // Mettre à jour la boite de résumé COMPLET
         document.getElementById('results-text').innerHTML = `
-            <div style="font-size:15px; margin-bottom:5px;"><strong>Statut :</strong> ${status}</div>
-            <div style="font-size:13px; line-height: 1.4;">
+            <div style="font-size:14px; margin-bottom:5px;"><strong>Statut :</strong> ${status}</div>
+            <div style="font-size:12px; line-height: 1.4;">
             <strong>Réglementation :</strong> Max ${max_weight} kg<br>
             <strong>Équipage :</strong> ${W_crew} kg (Pilote: ${pilot}kg, Passager: ${passenger}kg) &nbsp;|&nbsp; <strong>Bagages :</strong> ${baggage} kg<br>
             <strong>Carburant :</strong> ${fuel_L} L (${W_fuel.toFixed(1)} kg) &nbsp;|&nbsp; <strong>Conso :</strong> ${conso_horaire} L/h<br>
@@ -189,12 +186,12 @@
             </div>
         `;
 
-        // Générer le tableau Détaillé de la note de calcul
+        // Générer le tableau Détaillé
         const tableHtml = `
             <table class="calc-table">
                 <thead>
                     <tr>
-                        <th>Élément (Données de pesée)</th>
+                        <th>Élément</th>
                         <th>Masse (kg)</th>
                         <th>Bras de levier (mm)</th>
                         <th>Moment (kg.mm)</th>
@@ -202,7 +199,7 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td>Appareil à vide (Fiche)</td>
+                        <td>Appareil à vide</td>
                         <td>${W_empty.toFixed(2)}</td>
                         <td>${Arm_empty.toFixed(1)}</td>
                         <td>${M_empty.toFixed(2)}</td>
@@ -281,23 +278,17 @@
                 scales: {
                     x: {
                         type: 'linear', position: 'bottom',
-                        title: { display: true, text: 'Centre de Gravité (mm)', font: {size: 12, weight: 'bold'} },
+                        title: { display: true, text: 'Centre de Gravité (mm)', font: {size: 11, weight: 'bold'} },
                         min: 220, max: 310
                     },
                     y: {
-                        title: { display: true, text: 'Masse Totale (kg)', font: {size: 12, weight: 'bold'} },
+                        title: { display: true, text: 'Masse Totale (kg)', font: {size: 11, weight: 'bold'} },
                         min: 290, max: 550
                     }
                 },
                 plugins: {
-                    legend: {
-                        labels: { boxWidth: 12, font: {size: 11} }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) { return `CG: ${context.parsed.x.toFixed(1)} mm, Poids: ${context.parsed.y.toFixed(1)} kg`; }
-                        }
-                    }
+                    legend: { labels: { boxWidth: 10, font: {size: 10} } },
+                    tooltip: { callbacks: { label: function(context) { return `CG: ${context.parsed.x.toFixed(1)} mm, Poids: ${context.parsed.y.toFixed(1)} kg`; } } }
                 }
             }
         });
@@ -311,9 +302,16 @@
         const wrapper = document.getElementById('chart-wrapper');
         const calcNote = document.getElementById('calc-note');
         
-        // Afficher temporairement la note de calcul pour le PDF
+        // --- FIX POUR FORCER LE CONTENU SUR UNE SEULE PAGE A4 ---
+        // 1. On donne une largeur fixe au document pour garantir une proportion parfaite
+        element.style.width = '800px';
+        element.style.margin = '0';
+        element.style.padding = '15px';
+        
+        // 2. On affiche la note
         calcNote.style.display = 'block';
 
+        // 3. Capture du graphique en image fixe
         const imgData = canvas.toDataURL('image/png');
         const img = document.createElement('img');
         img.src = imgData;
@@ -325,18 +323,19 @@
         wrapper.appendChild(img);
 
         const opt = {
-            margin:       10, // Marges PDF de 10mm
+            margin:       10, // Marges réduites du PDF
             filename:     'Devis_Centrage_Ekolot_JK05.pdf',
             image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true },
+            html2canvas:  { scale: 2, useCORS: true, windowWidth: 800 }, // Force la largeur pour le rendu
             jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
         html2pdf().set(opt).from(element).save().then(() => {
+            // --- RESTAURATION DU STYLE NORMAL APRÈS EXPORT ---
             document.getElementById('temp-chart-img').remove(); 
             canvas.style.display = 'block'; 
-            // Recacher la note de calcul après l'export
             calcNote.style.display = 'none';
+            element.style.width = 'auto'; // Retire la largeur forcée
         });
     }
 
