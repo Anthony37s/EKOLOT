@@ -14,7 +14,7 @@
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .input-group { display: flex; flex-direction: column; }
         .input-group-full { grid-column: 1 / -1; display: flex; flex-direction: column; background: #eef2f5; padding: 10px; border-radius: 5px; }
-        label { font-weight: bold; margin-bottom: 5px; color: #34495e; }
+        label { font-weight: bold; margin-bottom: 5px; color: #34495e; font-size: 14px;}
         input[type="number"], select { padding: 10px; border: 1px solid #bdc3c7; border-radius: 5px; font-size: 16px; background-color: white;}
         input[type="range"] { margin-top: 5px; width: 100%; cursor: pointer;}
         .valeur-curseur { color: #2980b9; font-size: 18px; font-weight: bold; }
@@ -25,12 +25,22 @@
         .btn-pdf { background-color: #e74c3c; }
         .btn-pdf:hover { background-color: #c0392b; }
         
-        #pdf-zone { padding: 20px; background: #fff; border: 2px dashed #ecf0f1; border-radius: 5px; }
-        .header-pdf { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-bottom: 20px; }
+        #pdf-zone { padding: 15px; background: #fff; border: 2px dashed #ecf0f1; border-radius: 5px; }
+        .header-pdf { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #3498db; padding-bottom: 5px; margin-bottom: 10px; }
         .plane-art { font-family: monospace; white-space: pre; font-size: 14px; color: #7f8c8d; font-weight: bold;}
-        .results-box { background: #e8f4f8; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid #3498db; }
-        .results-box p { margin: 5px 0; font-size: 15px; }
-        .chart-container { position: relative; height: 500px; width: 100%; display: flex; justify-content: center; align-items: center;}
+        .results-box { background: #e8f4f8; padding: 10px; border-radius: 8px; margin-bottom: 10px; border-left: 5px solid #3498db; }
+        .results-box p { margin: 5px 0; font-size: 14px; }
+        
+        /* Styles pour la note de calcul */
+        #calc-note { display: none; } /* CACHÉ PAR DÉFAUT SUR L'ÉCRAN */
+        .calc-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 12px; text-align: left; }
+        .calc-table th { background-color: #ecf0f1; padding: 6px; border-bottom: 2px solid #bdc3c7; color: #2c3e50;}
+        .calc-table td { padding: 6px; border-bottom: 1px solid #ecf0f1; }
+        .calc-table .row-total { font-weight: bold; background-color: #e8f4f8; border-top: 2px solid #3498db; }
+        .calc-table .row-zf { font-weight: bold; background-color: #fdf2e9; }
+
+        /* Hauteur encore réduite pour assurer que ça tienne sur 1 page A4 */
+        .chart-container { position: relative; height: 260px; width: 100%; display: flex; justify-content: center; align-items: center;}
     </style>
 </head>
 <body>
@@ -79,8 +89,8 @@
     <div id="pdf-zone">
         <div class="header-pdf">
             <div>
-                <h2 style="margin:0; color:#2c3e50;">Devis de Masse et Centrage - ULM EKOLOT JK05</h2>
-                <p style="margin:5px 0 0 0; color:#7f8c8d;" id="date-display"></p>
+                <h2 style="margin:0; color:#2c3e50; font-size: 18px;">Devis de Masse et Centrage - ULM EKOLOT JK05</h2>
+                <p style="margin:3px 0 0 0; color:#7f8c8d; font-size: 13px;" id="date-display"></p>
             </div>
             <div class="plane-art">
    _|_   
@@ -93,6 +103,9 @@
             Le calcul va s'afficher ici...
         </div>
 
+        <div id="calc-note">
+            </div>
+
         <div class="chart-container" id="chart-wrapper">
             <canvas id="cgChart"></canvas>
         </div>
@@ -102,7 +115,7 @@
 <script>
     let cgChartInstance = null;
 
-    // Données fixes de l'Ekolot JK-05LS Junior
+    // Données fixes de l'Ekolot JK-05LS Junior (Pesée)
     const W_empty = 302.5;
     const Arm_empty = 261.7;
     const Arm_crew = 190.0;
@@ -122,10 +135,12 @@
 
         const fuel_reserve = conso_horaire * 0.5;
 
+        // Masses
         const W_crew = pilot + passenger;
         const W_bag = baggage;
         const W_fuel = fuel_L * fuel_density;
 
+        // Autonomie
         let fuel_dispo_trajet = fuel_L - fuel_inutilisable - fuel_reserve;
         let temps_vol_msg = "";
         
@@ -135,18 +150,21 @@
             let minutes = total_minutes % 60;
             temps_vol_msg = `<span style="color:#2980b9;"><b>${heures}h ${minutes}min</b> (avec ${fuel_reserve.toFixed(1)}L intouchables pour 30min de réserve)</span>`;
         } else {
-            temps_vol_msg = `<span style="color:red;"><b>INSUFFISANT</b> (Entame la réserve de sécurité obligatoire !)</span>`;
+            temps_vol_msg = `<span style="color:red;"><b>INSUFFISANT</b> (Entame la réserve de sécurité !)</span>`;
         }
 
+        // Moments
         const M_empty = W_empty * Arm_empty;
         const M_crew = W_crew * Arm_crew;
         const M_bag = W_bag * Arm_bag;
         const M_fuel = W_fuel * Arm_fuel;
 
+        // Totaux Décollage
         const W_init = W_empty + W_crew + W_bag + W_fuel;
         const M_init = M_empty + M_crew + M_bag + M_fuel;
         const CG_init = W_init > 0 ? (M_init / W_init) : 0;
 
+        // Totaux Sans Carburant
         const W_zf = W_empty + W_crew + W_bag;
         const M_zf = M_empty + M_crew + M_bag;
         const CG_zf = W_zf > 0 ? (M_zf / W_zf) : 0;
@@ -158,17 +176,71 @@
             "<span style='color:green; font-weight:bold;'>✓ VOL AUTORISÉ</span>" : 
             "<span style='color:red; font-weight:bold;'>⚠ HORS LIMITES (Poids ou Centrage)</span>";
 
+        // Mettre à jour la boite de résumé COMPLET
         document.getElementById('results-text').innerHTML = `
-            <div style="font-size:16px; margin-bottom:10px;"><strong>Statut :</strong> ${status}</div>
-            <strong>Réglementation choisie :</strong> Max ${max_weight} kg<br>
-            <strong>Équipage :</strong> ${W_crew} kg (Pilote: ${pilot}kg, Passager: ${passenger}kg)<br>
-            <strong>Bagages :</strong> ${baggage} kg<br>
-            <strong>Carburant embarqué :</strong> ${fuel_L} L (${W_fuel.toFixed(1)} kg) | <strong>Consommation :</strong> ${conso_horaire} L/h<br>
-            <strong>➔ Autonomie utile de vol :</strong> ${temps_vol_msg}<br><br>
-            <strong>Masse au Décollage :</strong> ${W_init.toFixed(1)} kg <em>(Max autorisé: ${max_weight} kg)</em><br>
-            <strong>Centrage au Décollage :</strong> ${CG_init.toFixed(1)} mm <em>(Limites: 227 mm à 300 mm)</em><br>
+            <div style="font-size:15px; margin-bottom:5px;"><strong>Statut :</strong> ${status}</div>
+            <div style="font-size:13px; line-height: 1.4;">
+            <strong>Réglementation :</strong> Max ${max_weight} kg<br>
+            <strong>Équipage :</strong> ${W_crew} kg (Pilote: ${pilot}kg, Passager: ${passenger}kg) &nbsp;|&nbsp; <strong>Bagages :</strong> ${baggage} kg<br>
+            <strong>Carburant :</strong> ${fuel_L} L (${W_fuel.toFixed(1)} kg) &nbsp;|&nbsp; <strong>Conso :</strong> ${conso_horaire} L/h<br>
+            <strong>➔ Autonomie utile :</strong> ${temps_vol_msg}<br>
+            <strong>Masse Décollage :</strong> ${W_init.toFixed(1)} kg <em>(Max ${max_weight} kg)</em> &nbsp;|&nbsp; <strong>Centrage Décollage :</strong> ${CG_init.toFixed(1)} mm<br>
             <strong>Centrage sans essence :</strong> ${CG_zf.toFixed(1)} mm
+            </div>
         `;
+
+        // Générer le tableau Détaillé de la note de calcul
+        const tableHtml = `
+            <table class="calc-table">
+                <thead>
+                    <tr>
+                        <th>Élément (Données de pesée)</th>
+                        <th>Masse (kg)</th>
+                        <th>Bras de levier (mm)</th>
+                        <th>Moment (kg.mm)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Appareil à vide (Fiche)</td>
+                        <td>${W_empty.toFixed(2)}</td>
+                        <td>${Arm_empty.toFixed(1)}</td>
+                        <td>${M_empty.toFixed(2)}</td>
+                    </tr>
+                    <tr>
+                        <td>Équipage</td>
+                        <td>${W_crew.toFixed(2)}</td>
+                        <td>${Arm_crew.toFixed(1)}</td>
+                        <td>${M_crew.toFixed(2)}</td>
+                    </tr>
+                    <tr>
+                        <td>Bagages</td>
+                        <td>${W_bag.toFixed(2)}</td>
+                        <td>${Arm_bag.toFixed(1)}</td>
+                        <td>${M_bag.toFixed(2)}</td>
+                    </tr>
+                    <tr>
+                        <td>Carburant</td>
+                        <td>${W_fuel.toFixed(2)}</td>
+                        <td>${Arm_fuel.toFixed(1)}</td>
+                        <td>${M_fuel.toFixed(2)}</td>
+                    </tr>
+                    <tr class="row-total">
+                        <td>TOTAL DÉCOLLAGE</td>
+                        <td>${W_init.toFixed(2)}</td>
+                        <td>${CG_init.toFixed(1)}</td>
+                        <td>${M_init.toFixed(2)}</td>
+                    </tr>
+                    <tr class="row-zf">
+                        <td>TOTAL SANS CARBURANT</td>
+                        <td>${W_zf.toFixed(2)}</td>
+                        <td>${CG_zf.toFixed(1)}</td>
+                        <td>${M_zf.toFixed(2)}</td>
+                    </tr>
+                </tbody>
+            </table>
+        `;
+        document.getElementById('calc-note').innerHTML = tableHtml;
 
         dessinerGraphique(CG_init, W_init, CG_zf, W_zf, max_weight);
     }
@@ -190,13 +262,13 @@
             data: {
                 datasets: [
                     {
-                        label: `Enveloppe Autorisée (Max ${max_weight}kg)`,
+                        label: `Enveloppe (Max ${max_weight}kg)`,
                         data: envelope,
                         borderColor: 'red', backgroundColor: 'rgba(255, 0, 0, 0.05)',
                         borderWidth: 2, borderDash: [5, 5], showLine: true, fill: true, pointRadius: 0
                     },
                     {
-                        label: 'Consommation Carburant (Décollage -> Vide)',
+                        label: 'Trajet Carburant',
                         data: trajet,
                         borderColor: 'blue', backgroundColor: 'blue', borderWidth: 3, showLine: true, pointRadius: 6,
                         pointBackgroundColor: ['green', 'orange']
@@ -209,15 +281,18 @@
                 scales: {
                     x: {
                         type: 'linear', position: 'bottom',
-                        title: { display: true, text: 'Position du Centre de Gravité (mm)', font: {size: 14, weight: 'bold'} },
+                        title: { display: true, text: 'Centre de Gravité (mm)', font: {size: 12, weight: 'bold'} },
                         min: 220, max: 310
                     },
                     y: {
-                        title: { display: true, text: 'Masse Totale (kg)', font: {size: 14, weight: 'bold'} },
+                        title: { display: true, text: 'Masse Totale (kg)', font: {size: 12, weight: 'bold'} },
                         min: 290, max: 550
                     }
                 },
                 plugins: {
+                    legend: {
+                        labels: { boxWidth: 12, font: {size: 11} }
+                    },
                     tooltip: {
                         callbacks: {
                             label: function(context) { return `CG: ${context.parsed.x.toFixed(1)} mm, Poids: ${context.parsed.y.toFixed(1)} kg`; }
@@ -234,7 +309,11 @@
         const element = document.getElementById('pdf-zone');
         const canvas = document.getElementById('cgChart');
         const wrapper = document.getElementById('chart-wrapper');
+        const calcNote = document.getElementById('calc-note');
         
+        // Afficher temporairement la note de calcul pour le PDF
+        calcNote.style.display = 'block';
+
         const imgData = canvas.toDataURL('image/png');
         const img = document.createElement('img');
         img.src = imgData;
@@ -246,7 +325,7 @@
         wrapper.appendChild(img);
 
         const opt = {
-            margin:       10,
+            margin:       10, // Marges PDF de 10mm
             filename:     'Devis_Centrage_Ekolot_JK05.pdf',
             image:        { type: 'jpeg', quality: 0.98 },
             html2canvas:  { scale: 2, useCORS: true },
@@ -256,6 +335,8 @@
         html2pdf().set(opt).from(element).save().then(() => {
             document.getElementById('temp-chart-img').remove(); 
             canvas.style.display = 'block'; 
+            // Recacher la note de calcul après l'export
+            calcNote.style.display = 'none';
         });
     }
 
