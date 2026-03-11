@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Devis de Masse et Centrage - Ekolot JK-05 Junior</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
@@ -84,7 +84,7 @@
 </div>
 
 <script>
-    let cgChartInstance = null; // Pour stocker le graphique et le mettre à jour
+    let cgChartInstance = null;
 
     // Données fixes de l'Ekolot JK-05LS Junior (Votre pesée du 05/02/2020)
     const W_empty = 302.5;
@@ -93,7 +93,9 @@
     const Arm_bag = 704.0;
     const Arm_fuel = 704.0;
     const fuel_density = 0.72; // kg par Litre
-    const max_weight = 525.0; // Masse max légale avec parachute
+    
+    // NOUVELLE LIMITE MAX : 472.5 kg (450 kg + 22.5 kg parachute)
+    const max_weight = 472.5; 
 
     function calculer() {
         // Récupérer les valeurs entrées
@@ -152,11 +154,11 @@
             cgChartInstance.destroy();
         }
 
-        // Configuration de l'enveloppe
+        // Configuration de l'enveloppe avec la limite à 472.5 kg
         const envelope = [
             {x: 227, y: 300},
-            {x: 227, y: 525},
-            {x: 300, y: 525},
+            {x: 227, y: max_weight},
+            {x: 300, y: max_weight},
             {x: 300, y: 300},
             {x: 227, y: 300} // Ferme le polygone
         ];
@@ -172,7 +174,7 @@
             data: {
                 datasets: [
                     {
-                        label: 'Enveloppe Autorisée (Max 525kg)',
+                        label: 'Enveloppe Autorisée (Max 472.5kg)',
                         data: envelope,
                         borderColor: 'red',
                         backgroundColor: 'rgba(255, 0, 0, 0.05)',
@@ -190,7 +192,7 @@
                         borderWidth: 3,
                         showLine: true,
                         pointRadius: 6,
-                        pointBackgroundColor: ['green', 'orange'] // Point décollage vert, point vide orange
+                        pointBackgroundColor: ['green', 'orange']
                     }
                 ]
             },
@@ -208,7 +210,7 @@
                     y: {
                         title: { display: true, text: 'Masse Totale (kg)', font: {size: 14, weight: 'bold'} },
                         min: 290,
-                        max: 550
+                        max: 500 
                     }
                 },
                 plugins: {
@@ -225,9 +227,7 @@
     }
 
     function genererPDF() {
-        // Appelle la fonction calculer pour être sûr que tout est à jour
         calculer();
-        
         const element = document.getElementById('pdf-zone');
         const opt = {
             margin:       10,
@@ -236,8 +236,6 @@
             html2canvas:  { scale: 2 },
             jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
-
-        // Génération du PDF
         html2pdf().set(opt).from(element).save();
     }
 
